@@ -19,7 +19,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding-bottom: 20px;
         }
 
         .dedication {
@@ -69,8 +71,8 @@
         .field-container {
             position: relative;
             width: 100%;
-            max-width: 800px;
-            aspect-ratio: 4/3;
+            max-width: 700px;
+            aspect-ratio: 16/10;
             margin: 10px 20px;
         }
 
@@ -407,9 +409,9 @@
             left: 50%;
             transform: translateX(-50%);
             width: 200px;
-            height: 25px;
+            height: 20px;
             background: rgba(0,0,0,0.5);
-            border-radius: 15px;
+            border-radius: 12px;
             overflow: hidden;
             display: none;
             border: 3px solid white;
@@ -420,18 +422,7 @@
             width: 0%;
             background: linear-gradient(90deg, #00ff00, #ffff00, #ff9900, #ff0000);
             transition: width 0.05s linear;
-            border-radius: 12px;
-        }
-
-        .power-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-weight: 900;
-            font-size: 0.9rem;
-            text-shadow: 1px 1px 2px black;
+            border-radius: 10px;
         }
 
         /* הכדור */
@@ -614,7 +605,6 @@
             <!-- מד כוח -->
             <div class="power-container" id="powerContainer">
                 <div class="power-bar" id="powerBar"></div>
-                <div class="power-text">שחרר כדי לבעוט!</div>
             </div>
         </div>
     </div>
