@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ רועי הכוכב - משחק כדורגל</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Rubik:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .dedication {
+            width: 100%;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            text-align: center;
+            padding: 12px 20px;
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 15px 20px;
+        }
+
+        .title {
+            font-family: 'Rubik', sans-serif;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .score {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .score span {
+            color: #FFD700;
+            font-size: 1.5rem;
+        }
+
+        .field-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 4/3;
+            margin: 10px 20px;
+        }
+
+        .field {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                #2d5a27 0%, #3d7a37 10%, 
+                #2d5a27 10%, #3d7a37 20%,
+                #2d5a27 20%, #3d7a37 30%,
+                #2d5a27 30%, #3d7a37 40%,
+                #2d5a27 40%, #3d7a37 50%,
+                #2d5a27 50%, #3d7a37 60%,
+                #2d5a27 60%, #3d7a37 70%,
+                #2d5a27 70%, #3d7a37 80%,
+                #2d5a27 80%, #3d7a37 90%,
+                #2d5a27 90%, #3d7a37 100%
+            );
+            border-radius: 10px;
+            position: relative;
+            cursor: crosshair;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .field::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: rgba(255,255,255,0.4);
+        }
+
+        .center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border: 4px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+        }
+
+        /* השער */
+        .goal {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 180px;
+            background: rgba(255,255,255,0.1);
+            border: 8px solid white;
+            border-right: none;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+
+        .goal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 2px, transparent 2px, transparent 15px),
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 2px, transparent 2px, transparent 15px);
+        }
+
+        .goal::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -8px;
+            width: calc(100% + 8px);
+            height: 12px;
+            background: white;
+            border-radius: 5px 0 0 0;
+        }
+
+        .penalty-area {
+            position: absolute;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 150px;
+            height: 280px;
+            border: 4px solid rgba(255,255,255,0.5);
+            border-right: none;
+        }
+
+        .penalty-spot {
+            position: absolute;
+            top: 50%;
+            right: 100px;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+        }
+
+        /* ===== השוער - דמות שלמה עם פרצוף אימוג'י ===== */
+        .goalkeeper {
+            position: absolute;
+            top: 50%;
+            right: 65px;
+            transform: translateY(-50%);
+            transition: top 0.3s ease;
+            z-index: 10;
+        }
+
+        .gk-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gk-head {
+            font-size: 2.5rem;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .gk-body {
+            width: 36px;
+            height: 32px;
+            background: linear-gradient(135deg, #ff6b00, #ff8c00);
+            border-radius: 8px 8px 0 0;
+            margin-top: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .gk-body::after {
+            content: '1';
+            color: white;
+            font-weight: 900;
+            font-size: 1rem;
+        }
+
+        .gk-arms {
+            position: absolute;
+            top: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .gk-arm {
+            width: 10px;
+            height: 22px;
+            background: linear-gradient(to bottom, #ff6b00 60%, #f5d0a9 60%);
+            border-radius: 4px;
+        }
+
+        .gk-arm.left { margin-left: -6px; }
+        .gk-arm.right { margin-right: -6px; }
+
+        .gk-shorts {
+            width: 34px;
+            height: 18px;
+            background: #222;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .gk-legs {
+            display: flex;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .gk-leg {
+            width: 11px;
+            height: 28px;
+            background: linear-gradient(to bottom, #f5d0a9 50%, #ff6b00 50%, #ff6b00 85%, #222 85%);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .gk-gloves {
+            position: absolute;
+            top: 25px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px;
+        }
+
+        .gk-glove {
+            width: 14px;
+            height: 14px;
+            background: #39ff14;
+            border-radius: 3px;
+        }
+
+        .gk-glove.left { margin-left: -10px; }
+        .gk-glove.right { margin-right: -10px; }
+
+        /* ===== רועי - דמות שלמה עם פרצוף אימוג'י ===== */
+        .player {
+            position: absolute;
+            bottom: 50px;
+            left: 130px;
+            z-index: 20;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .player:active {
+            cursor: grabbing;
+        }
+
+        .player.dragging {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .player-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .roi-head {
+            font-size: 2.8rem;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .roi-body {
+            width: 42px;
+            height: 36px;
+            background: linear-gradient(135deg, #1e90ff, #0066cc);
+            border-radius: 8px 8px 0 0;
+            margin-top: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .roi-body::after {
+            content: '10';
+            color: white;
+            font-weight: 900;
+            font-size: 1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .roi-arms {
+            position: absolute;
+            top: 5px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .roi-arm {
+            width: 10px;
+            height: 24px;
+            background: linear-gradient(to bottom, #1e90ff 55%, #f5d0a9 55%);
+            border-radius: 4px;
+            transform-origin: top center;
+        }
+
+        .roi-arm.left { 
+            margin-left: -6px;
+            transform: rotate(-20deg);
+        }
+        
+        .roi-arm.right { 
+            margin-right: -6px; 
+            transform: rotate(20deg);
+        }
+
+        .roi-shorts {
+            width: 40px;
+            height: 18px;
+            background: #fff;
+            border-radius: 0 0 6px 6px;
+            border: 2px solid #eee;
+        }
+
+        .roi-legs {
+            display: flex;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .roi-leg {
+            width: 12px;
+            height: 32px;
+            background: linear-gradient(to bottom, #f5d0a9 35%, #1e90ff 35%, #1e90ff 85%, #222 85%);
+            border-radius: 0 0 4px 4px;
+            transform-origin: top center;
+        }
+
+        .roi-leg.right {
+            transition: transform 0.15s ease;
+        }
+
+        .roi-leg.right.kicking {
+            animation: kickLeg 0.4s ease;
+        }
+
+        @keyframes kickLeg {
+            0% { transform: rotate(0deg); }
+            30% { transform: rotate(-50deg); }
+            60% { transform: rotate(30deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .player-name {
+            color: #1a1a2e;
+            font-weight: 900;
+            font-size: 1rem;
+            margin-top: 8px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 4px 12px;
+            border-radius: 15px;
+            white-space: nowrap;
+        }
+
+        /* מד כוח */
+        .power-container {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 25px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            display: none;
+            border: 3px solid white;
+        }
+
+        .power-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff9900, #ff0000);
+            transition: width 0.05s linear;
+            border-radius: 12px;
+        }
+
+        .power-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: 900;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* הכדור */
+        .ball {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle at 30% 30%, white 0%, #ddd 50%, #aaa 100%);
+            border-radius: 50%;
+            z-index: 15;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .ball::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 1px;
+            transform: rotate(45deg);
+        }
+
+        .ball.flying {
+            transition: all 0.5s ease-out;
+        }
+
+        /* הודעות */
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Rubik', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+            opacity: 0;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .message.show {
+            animation: popMessage 1.5s ease forwards;
+        }
+
+        @keyframes popMessage {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            40% { transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; }
+        }
+
+        .goal-message { color: #00ff00; }
+        .miss-message { color: #ff4444; }
+        .save-message { color: #ffaa00; }
+
+        .instructions {
+            color: white;
+            text-align: center;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.3);
+            max-width: 800px;
+            border-radius: 15px;
+            margin: 10px;
+        }
+
+        .instructions strong {
+            color: #FFD700;
+        }
+
+        .reset-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px 25px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 200;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* קונפטי */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 600px) {
+            .title { font-size: 1.3rem; }
+            .score-board { gap: 10px; font-size: 1rem; }
+            .player { left: 80px; bottom: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dedication">
+        ⚽ לרועי, הילד הכי מדהים - זה בשבילך, מאבא שאוהב אותך הכי בעולם ❤️
+    </div>
+
+    <div class="header">
+        <h1 class="title">⚽ רועי הכוכב</h1>
+        <div class="score-board">
+            <div class="score">גולים: <span id="goals">0</span></div>
+            <div class="score">בעיטות: <span id="kicks">0</span></div>
+        </div>
+    </div>
+
+    <div class="field-container">
+        <div class="field" id="field">
+            <div class="center-circle"></div>
+            <div class="penalty-area"></div>
+            <div class="penalty-spot"></div>
+            <div class="goal" id="goal"></div>
+            
+            <!-- השוער -->
+            <div class="goalkeeper" id="goalkeeper">
+                <div class="gk-container">
+                    <div class="gk-head">🧒</div>
+                    <div class="gk-body">
+                        <div class="gk-arms">
+                            <div class="gk-arm left"></div>
+                            <div class="gk-arm right"></div>
+                        </div>
+                        <div class="gk-gloves">
+                            <div class="gk-glove left"></div>
+                            <div class="gk-glove right"></div>
+                        </div>
+                    </div>
+                    <div class="gk-shorts"></div>
+                    <div class="gk-legs">
+                        <div class="gk-leg"></div>
+                        <div class="gk-leg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- רועי -->
+            <div class="player" id="player">
+                <div class="player-container">
+                    <div class="roi-head">👦🏻</div>
+                    <div class="roi-body">
+                        <div class="roi-arms">
+                            <div class="roi-arm left"></div>
+                            <div class="roi-arm right"></div>
+                        </div>
+                    </div>
+                    <div class="roi-shorts"></div>
+                    <div class="roi-legs">
+                        <div class="roi-leg left"></div>
+                        <div class="roi-leg right" id="kickingLeg"></div>
+                    </div>
+                </div>
+                <div class="player-name">⭐ רועי ⭐</div>
+            </div>
+
+            <div class="ball" id="ball"></div>
+            <div class="message" id="message"></div>
+            
+            <!-- מד כוח -->
+            <div class="power-container" id="powerContainer">
+                <div class="power-bar" id="powerBar"></div>
+                <div class="power-text">שחרר כדי לבעוט!</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        🖐️ <strong>גרור את רועי</strong> לכל מקום במגרש | 👆 <strong>לחץ והחזק</strong> לטעון כוח, <strong>שחרר כדי לבעוט!</strong> 🎯
+    </div>
+
+    <button class="reset-btn" onclick="resetGame()">🔄 משחק חדש</button>
+
+    <script>
+        function resetGame() {
+            location.reload();
+        }
+
+        const field = document.getElementById('field');
+        const ball = document.getElementById('ball');
+        const goalkeeper = document.getElementById('goalkeeper');
+        const goal = document.getElementById('goal');
+        const message = document.getElementById('message');
+        const kickingLeg = document.getElementById('kickingLeg');
+        const powerContainer = document.getElementById('powerContainer');
+        const powerBar = document.getElementById('powerBar');
+        const player = document.getElementById('player');
+
+        let goals = 0;
+        let kicks = 0;
+        let canKick = true;
+        let isCharging = false;
+        let power = 0;
+        let powerInterval;
+        let targetX, targetY;
+
+        // גרירת רועי
+        let isDraggingPlayer = false;
+        let playerOffsetX, playerOffsetY;
+
+        player.addEventListener('mousedown', startDragPlayer);
+        player.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const touch = e.touches[0];
+            startDragPlayerAt(touch.clientX, touch.clientY);
+        });
+
+        function startDragPlayer(e) {
+            e.stopPropagation();
+            startDragPlayerAt(e.clientX, e.clientY);
+        }
+
+        function startDragPlayerAt(clientX, clientY) {
+            isDraggingPlayer = true;
+            player.classList.add('dragging');
+            const rect = player.getBoundingClientRect();
+            const fieldRect = field.getBoundingClientRect();
+            playerOffsetX = clientX - rect.left;
+            playerOffsetY = clientY - rect.top;
+        }
+
+        document.addEventListener('mousemove', dragPlayer);
+        document.addEventListener('touchmove', (e) => {
+            if (isDraggingPlayer) {
+                const touch = e.touches[0];
+                dragPlayerAt(touch.clientX, touch.clientY);
+            }
+        });
+
+        function dragPlayer(e) {
+            if (!isDraggingPlayer) return;
+            dragPlayerAt(e.clientX, e.clientY);
+        }
+
+        function dragPlayerAt(clientX, clientY) {
+            const fieldRect = field.getBoundingClientRect();
+            let newX = clientX - fieldRect.left - playerOffsetX;
+            let newY = clientY - fieldRect.top - playerOffsetY;
+            
+            // הגבלה לתוך המגרש
+            newX = Math.max(10, Math.min(field.offsetWidth - 80, newX));
+            newY = Math.max(10, Math.min(field.offsetHeight - 140, newY));
+            
+            player.style.left = newX + 'px';
+            player.style.top = newY + 'px';
+            player.style.bottom = 'auto';
+            
+            // הכדור עוקב אחרי רועי
+            ball.style.transition = 'none';
+            ball.style.left = (newX + 50) + 'px';
+            ball.style.top = (newY + 100) + 'px';
+        }
+
+        document.addEventListener('mouseup', stopDragPlayer);
+        document.addEventListener('touchend', stopDragPlayer);
+
+        function stopDragPlayer() {
+            if (isDraggingPlayer) {
+                isDraggingPlayer = false;
+                player.classList.remove('dragging');
+            }
+        }
+
+        function initPositions() {
+            resetBall();
+        }
+
+        function resetBall() {
+            const playerRect = player.getBoundingClientRect();
+            const fieldRect = field.getBoundingClientRect();
+            
+            ball.style.transition = 'none';
+            ball.style.left = (player.offsetLeft + 50) + 'px';
+            ball.style.top = (player.offsetTop + 100) + 'px';
+            ball.classList.remove('flying');
+            
+            canKick = true;
+            moveGoalkeeper();
+        }
+
+        function moveGoalkeeper() {
+            const goalElement = document.getElementById('goal');
+            const goalTop = goalElement.offsetTop;
+            const goalHeight = goalElement.offsetHeight;
+            
+            const minY = goalTop + 30;
+            const maxY = goalTop + goalHeight - 100;
+            const randomY = minY + Math.random() * (maxY - minY);
+            goalkeeper.style.top = randomY + 'px';
+            goalkeeper.style.transform = 'none';
+        }
+
+        // התחלת טעינה
+        field.addEventListener('mousedown', startCharge);
+        field.addEventListener('touchstart', (e) => {
+            if (isDraggingPlayer) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            startChargeAt(touch.clientX, touch.clientY);
+        });
+
+        function startCharge(e) {
+            if (isDraggingPlayer) return;
+            startChargeAt(e.clientX, e.clientY);
+        }
+
+        function startChargeAt(clientX, clientY) {
+            if (!canKick || isDraggingPlayer) return;
+            
+            const rect = field.getBoundingClientRect();
+            targetX = clientX - rect.left;
+            targetY = clientY - rect.top;
+            
+            isCharging = true;
+            power = 0;
+            
+            powerContainer.style.display = 'block';
+            powerBar.style.width = '0%';
+            
+            powerInterval = setInterval(() => {
+                power = Math.min(power + 3, 100);
+                powerBar.style.width = power + '%';
+            }, 50);
+        }
+
+        // שחרור ובעיטה
+        field.addEventListener('mouseup', doKick);
+        field.addEventListener('mouseleave', doKick);
+        field.addEventListener('touchend', (e) => {
+            if (!isDraggingPlayer) {
+                doKick();
+            }
+        });
+
+        function doKick() {
+            if (!isCharging) return;
+            
+            isCharging = false;
+            clearInterval(powerInterval);
+            powerContainer.style.display = 'none';
+            canKick = false;
+            
+            kicks++;
+            document.getElementById('kicks').textContent = kicks;
+            
+            // אנימציית בעיטה
+            kickingLeg.classList.add('kicking');
+            setTimeout(() => kickingLeg.classList.remove('kicking'), 400);
+            
+            // הזזת השוער
+            setTimeout(() => {
+                const goalElement = document.getElementById('goal');
+                const goalTop = goalElement.offsetTop;
+                const goalHeight = goalElement.offsetHeight;
+                
+                const gkGuess = targetY + (Math.random() - 0.5) * (150 - power);
+                const minGk = goalTop + 20;
+                const maxGk = goalTop + goalHeight - 100;
+                goalkeeper.style.transition = 'top 0.35s ease';
+                goalkeeper.style.top = Math.max(minGk, Math.min(maxGk, gkGuess)) + 'px';
+            }, 100);
+            
+            // בעיטת הכדור
+            setTimeout(() => {
+                ball.classList.add('flying');
+                ball.style.transition = `all ${0.3 + (power / 200)}s ease-out`;
+                ball.style.left = targetX + 'px';
+                ball.style.top = targetY + 'px';
+            }, 200);
+            
+            // בדיקת תוצאה
+            setTimeout(() => {
+                checkResult(targetX, targetY);
+            }, 600 + (power / 200) * 1000);
+        }
+
+        function checkResult(ballX, ballY) {
+            const fieldWidth = field.offsetWidth;
+            const gkRect = goalkeeper.getBoundingClientRect();
+            const fieldRect = field.getBoundingClientRect();
+            
+            const gkTop = gkRect.top - fieldRect.top;
+            const gkBottom = gkTop + gkRect.height;
+            const gkLeft = gkRect.left - fieldRect.left - 15;
+            const gkRight = gkRect.right - fieldRect.left + 15;
+            
+            const goalElement = goal;
+            const goalTop = goalElement.offsetTop;
+            const goalBottom = goalTop + goalElement.offsetHeight;
+            const goalLeft = fieldWidth - goalElement.offsetWidth - 10;
+            
+            const inGoalX = ballX > goalLeft;
+            const inGoalY = ballY > goalTop && ballY < goalBottom;
+            
+            const gkCaughtX = ballX > gkLeft && ballX < gkRight;
+            const gkCaughtY = ballY > gkTop - 20 && ballY < gkBottom + 20;
+            const gkCaught = gkCaughtX && gkCaughtY;
+            
+            if (inGoalX && inGoalY && !gkCaught) {
+                goals++;
+                document.getElementById('goals').textContent = goals;
+                showMessage('גוווול! ⚽🎉', 'goal-message');
+                createConfetti();
+            } else if (gkCaught) {
+                showMessage('הציל! 🧤', 'save-message');
+            } else {
+                showMessage('פספוס! 😅', 'miss-message');
+            }
+            
+            setTimeout(resetBall, 2000);
+        }
+
+        function showMessage(text, className) {
+            message.textContent = text;
+            message.className = 'message ' + className + ' show';
+            setTimeout(() => message.classList.remove('show'), 1500);
+        }
+
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#FFD700'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * field.offsetWidth + 'px';
+                confetti.style.top = '0px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confettiFall ${1 + Math.random()}s ease forwards`;
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                field.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        window.addEventListener('load', initPositions);
+        window.addEventListener('resize', initPositions);
+    </script>
+</body>
+</html>
